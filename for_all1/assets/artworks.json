@@ -1,33 +1,53 @@
 [
-    {
-      "id": 1,
-      "title": "프로그램팀 파이팅~",
-      "description": "정말 멋진 작품",
-      "details": {
-        "표현 기법": "수채화",
-        "역사": "아주 깊은 역사",
-        "미술사적 의의": "아주 뜻깊은 작품임"
-      }
+  {
+    "id": 1,
+    "title": "프로그램팀 파이팅~",
+    "description": "정말 멋진 작품",
+    "details": {
+      "표현 기법": "수채화",
+      "역사": "아주 깊은 역사",
+      "미술사적 의의": "아주 뜻깊은 작품임"
     },
-    {
-      "id": 2,
-      "title": "작품2",
-      "description": "예쁜 작품~",
-      "details": {
-        "표현 기법": "수묵화",
-        "역사": "조선 후기",
-        "미술사적 의의": "어쩌고저쩌고"
-      }
+    "audioAssetPath": "audio/Day6.mp3",
+    "blockTimestamps": [
+      0,
+      30,
+      50,
+      60
+    ]
+  },
+  {
+    "id": 2,
+    "title": "작품2",
+    "description": "예쁜 작품~",
+    "details": {
+      "표현 기법": "수묵화",
+      "역사": "조선 후기",
+      "미술사적 의의": "어쩌고저쩌고"
     },
-    {
-      "id": 3,
-      "title": "작품3",
-      "description": "대충 작품 설명",
-      "details": {
-        "표현 기법": "유화",
-        "역사": "근대",
-        "미술사적 의의": "이러쿵저러쿵"
-      }
-    }
-  ]
-  
+    "audioAssetPath": "audio/Day6.mp3",
+    "blockTimestamps": [
+      0,
+      20,
+      70,
+      90
+    ]
+  },
+  {
+    "id": 3,
+    "title": "작품3",
+    "description": "대충 작품 설명",
+    "details": {
+      "표현 기법": "유화",
+      "역사": "근대",
+      "미술사적 의의": "이러쿵저러쿵"
+    },
+    "audioAssetPath": "assets/audio/Maji.mp3",
+    "blockTimestamps": [
+      0,
+      20,
+      50,
+      60
+    ]
+  }
+]
