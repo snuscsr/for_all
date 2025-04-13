@@ -26,6 +26,7 @@ class ArtworkListScreen extends StatelessWidget {
                   subtitle: Text(artwork.description),
                   trailing: ElevatedButton(
                     onPressed: () {
+                      tourState.previousArtworkIndex = tourState.currentArtworkIndex;
                       tourState.currentArtworkIndex = index;
                       Navigator.pushNamed(context, '/navigate');
                     },
