@@ -49,5 +49,107 @@
       50,
       60
     ]
+  },
+  {
+    "id": 4,
+    "title": "작품4~",
+    "description": "입체!",
+    "details": {
+      "표현 기법": "수채화",
+      "역사": "아주 깊은 역사",
+      "미술사적 의의": "아주 뜻깊은 작품임"
+    },
+    "audioAssetPath": "assets/audio/Maji.mp3",
+    "blockTimestamps": [
+      0,
+      20,
+      50,
+      60
+    ]
+  },
+  {
+    "id": 5,
+    "title": "작품5~",
+    "description": "나~",
+    "details": {
+      "표현 기법": "수채화",
+      "역사": "아주 깊은 역사",
+      "미술사적 의의": "아주 뜻깊은 작품임"
+    },
+    "audioAssetPath": "assets/audio/Maji.mp3",
+    "blockTimestamps": [
+      0,
+      20,
+      50,
+      60
+    ]
+  },
+  {
+    "id": 6,
+    "title": "작품6666~",
+    "description": "란~",
+    "details": {
+      "표현 기법": "수채화",
+      "역사": "아주 깊은 역사",
+      "미술사적 의의": "아주 뜻깊은 작품임"
+    },
+    "audioAssetPath": "assets/audio/Maji.mp3",
+    "blockTimestamps": [
+      0,
+      20,
+      50,
+      60
+    ]
+  },
+  {
+    "id": 7,
+    "title": "작품777~",
+    "description": "히~~",
+    "details": {
+      "표현 기법": "수채화",
+      "역사": "아주 깊은 역사",
+      "미술사적 의의": "아주 뜻깊은 작품임"
+    },
+    "audioAssetPath": "assets/audio/Maji.mp3",
+    "blockTimestamps": [
+      0,
+      20,
+      50,
+      60
+    ]
+  },
+  {
+    "id": 8,
+    "title": "작품88~",
+    "description": "커요",
+    "details": {
+      "표현 기법": "수채화",
+      "역사": "아주 깊은 역사",
+      "미술사적 의의": "아주 뜻깊은 작품임"
+    },
+    "audioAssetPath": "assets/audio/Maji.mp3",
+    "blockTimestamps": [
+      0,
+      20,
+      50,
+      60
+    ]
+  },
+  {
+    "id": 9,
+    "title": "작품9~",
+    "description": "작아요",
+    "details": {
+      "표현 기법": "수채화",
+      "역사": "아주 깊은 역사",
+      "미술사적 의의": "아주 뜻깊은 작품임"
+    },
+    "audioAssetPath": "assets/audio/Maji.mp3",
+    "blockTimestamps": [
+      0,
+      20,
+      50,
+      60
+    ]
   }
 ]
