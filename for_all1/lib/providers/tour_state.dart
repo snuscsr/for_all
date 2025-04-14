@@ -7,6 +7,8 @@ import 'dart:developer';
 class TourState with ChangeNotifier {
   List<String> selectedOptions = [];
   int currentArtworkIndex = 0;
+  int previousArtworkIndex = -1; // 이전 index 저장 용도
+  int entryPoint = 0; // 0: 최초 진입, 1: explanation → navigate, 2: explanation → artwork list
   List<Artwork> artworks = [];
 
   void toggleOption(String option) {

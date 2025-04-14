@@ -165,8 +165,33 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                           ],
                         ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Column(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    if (tourState.currentArtworkIndex < tourState.artworks.length - 1) {
+                      tourState.goToNextArtwork();
+                      tourState.entryPoint = 1; // explanation → navigate
+                      Navigator.pushNamed(context, '/navigate');
+                    } else {
+                      Navigator.pushNamed(context, '/end');
+                    }
+                  },
+                  child: const Text('다음 작품 보러가기'),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    tourState.entryPoint = 2; // explanation → artwork list
+                    Navigator.pushNamed(context, '/artworks');
+                  },
+                  child: const Text('작품 리스트로 돌아가기'),
                 ),
               ),
               const SizedBox(height: 20),
