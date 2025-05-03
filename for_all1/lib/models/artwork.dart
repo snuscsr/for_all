@@ -2,6 +2,7 @@ class Artwork {
   final int id;
   final String title;
   final String description;
+  final String artist;
   final Map<String, String> details;
   final String audioAssetPath; // 예: 'audio/explanation1.mp3'
   final List<Duration> blockTimestamps; // 블록 단위 시간
@@ -10,6 +11,7 @@ class Artwork {
     required this.id,
     required this.title,
     required this.description,
+    required this.artist,
     required this.details,
     required this.audioAssetPath,
     required this.blockTimestamps,
@@ -20,6 +22,7 @@ class Artwork {
       id: json['id'],
       title: json['title'],
       description: json['description'],
+      artist: json['artist'],
       details: Map<String, String>.from(json['details']),
       audioAssetPath: json['audioAssetPath'],
       blockTimestamps: (json['blockTimestamps'] as List<dynamic>)

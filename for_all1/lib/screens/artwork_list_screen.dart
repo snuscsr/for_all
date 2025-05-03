@@ -18,19 +18,45 @@ class ArtworkListScreen extends StatelessWidget {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: artworks.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final artwork = artworks[index];
-                return ListTile(
-                  title: Text(artwork.title, style: const TextStyle(fontSize: 18)),
-                  subtitle: Text(artwork.description),
-                  trailing: ElevatedButton(
-                    onPressed: () {
-                      tourState.previousArtworkIndex = tourState.currentArtworkIndex;
-                      tourState.currentArtworkIndex = index;
-                      Navigator.pushNamed(context, '/navigate');
-                    },
-                    child: const Text('작품 보러가기'),
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          artwork.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '작가: ${artwork.artist}',
+                          style: const TextStyle(fontSize: 15),
+                        ),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              tourState.previousArtworkIndex = tourState.currentArtworkIndex;
+                              tourState.currentArtworkIndex = index;
+                              Navigator.pushNamed(context, '/navigate');
+                            },
+                            child: const Text('작품 보러가기'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
