@@ -6,12 +6,9 @@ class OptionScreen extends StatelessWidget {
   const OptionScreen({super.key});
 
   final List<String> options = const [
-    '표현 기법',
-    '역사',
-    '미술사적 의의',
+    '작품 크기',
     '작가 소개',
-    '작품 배경',
-    '기법 분석'
+    '작품 배경'
   ];
 
   @override
