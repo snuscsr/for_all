@@ -148,8 +148,23 @@ Widget build(BuildContext context) {
         child: Column(
           children: [
             Expanded(
-              child: ListView(
-                children: selectedOptions.map((option) {
+            child: ListView(
+              children: [
+                // 🔹 작품 설명 맨 위에 추가
+                Card(
+                  color: Colors.grey[100],
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      artwork.description,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+
+                // 🔹 이어서 옵션 카드들
+                ...selectedOptions.map((option) {
                   final content = artwork.details[option] ?? '정보 없음';
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8),
@@ -166,8 +181,10 @@ Widget build(BuildContext context) {
                     ),
                   );
                 }).toList(),
-              ),
+              ],
             ),
+          ),
+
             const SizedBox(height: 20),
             Column(
               children: [
