@@ -7,6 +7,10 @@ class Artwork {
   final String audioAssetPath; // 예: 'audio/explanation1.mp3'
   final List<Duration> blockTimestamps; // 블록 단위 시간
 
+  final double x;
+  final double y;
+  final double z;
+
   Artwork({
     required this.id,
     required this.title,
@@ -15,6 +19,9 @@ class Artwork {
     required this.details,
     required this.audioAssetPath,
     required this.blockTimestamps,
+    required this.x,
+    required this.y,
+    required this.z,
   });
 
   factory Artwork.fromJson(Map<String, dynamic> json) {
@@ -28,6 +35,9 @@ class Artwork {
       blockTimestamps: (json['blockTimestamps'] as List<dynamic>)
           .map((seconds) => Duration(seconds: seconds as int))
           .toList(),
+      x: json['x'].toDouble(),
+      y: json['y'].toDouble(),
+      z: json['z'].toDouble(),
     );
   }
 }
