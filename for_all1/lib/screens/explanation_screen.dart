@@ -4,6 +4,43 @@ import 'package:audioplayers/audioplayers.dart';
 import '../providers/tour_state.dart';
 
 
+// 버튼 공통 위젯
+Widget _buildButton(BuildContext context, String text, VoidCallback onPressed,
+    [bool isDisabled = false, IconData? icon]) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    width: double.infinity,
+    height: 65,
+    child: ElevatedButton(
+      onPressed: isDisabled ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFFFD600),
+        disabledBackgroundColor: Colors.grey[700],
+        foregroundColor: Colors.black,
+        disabledForegroundColor: Colors.white70,
+        textStyle: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        elevation: 0,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 24),
+            const SizedBox(width: 12),
+          ],
+          Text(isDisabled ? '해설 재생 중... ($text)' : text),
+        ],
+      ),
+    ),
+  );
+}
+
 class ExplanationScreen extends StatefulWidget {
   const ExplanationScreen({super.key});
 
@@ -18,7 +55,6 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
   bool isCompleted = false;
   bool isPlaying = false;
   bool _doubleTapDetected = false;
-
 
   @override
   void initState() {
@@ -64,51 +100,104 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
   void _showEndOptions(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: const Text("해설 종료"),
-        content: const Text("다음 작업을 선택하세요."),
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          "해설 종료",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          "다음 작업을 선택하세요.",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+          ),
+        ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Provider.of<TourState>(context, listen: false).goToNextArtwork();
-              Navigator.pushNamed(context, '/navigate');
-            },
-            child: const Text("다음 작품"),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Provider.of<TourState>(context, listen: false).goToNextArtwork();
+                Navigator.pushNamed(context, '/navigate');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFD600),
+                foregroundColor: Colors.black,
+                textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text("다음 작품"),
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/artworks');
-            },
-            child: const Text("다른 작품"),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/artworks');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[800],
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text("다른 작품"),
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/end');
-            },
-            child: const Text("관람 종료"),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/end');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[800],
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text("관람 종료"),
+            ),
           ),
         ],
+        actionsPadding: const EdgeInsets.all(16),
       ),
     );
   }
 
   void _togglePlayPause() async {
-  if (isPlaying) {
-    await _audioPlayer.pause();
-    setState(() {
-      isPlaying = false;
-    });
-  } else {
-    await _audioPlayer.resume();
-    setState(() {
-      isPlaying = true;
-    });
+    if (isPlaying) {
+      await _audioPlayer.pause();
+      setState(() {
+        isPlaying = false;
+      });
+    } else {
+      await _audioPlayer.resume();
+      setState(() {
+        isPlaying = true;
+      });
+    }
   }
-}
-
 
   @override
 Widget build(BuildContext context) {
@@ -124,110 +213,173 @@ Widget build(BuildContext context) {
     });
   }
 
-  return Scaffold(
-    appBar: AppBar(title: Text(artwork.title)),
-    body: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        Future.delayed(const Duration(milliseconds: 250), () {
-          if (!_doubleTapDetected) {
-            _togglePlayPause();
-          }
-        });
-      },
-      onDoubleTap: () {
-        _doubleTapDetected = true;
-        _changeSpeed();
-        Future.delayed(const Duration(milliseconds: 300), () {
-          _doubleTapDetected = false;
-        });
-      },
-      onLongPress: () => _nextBlock(blocks),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Expanded(
-            child: ListView(
-              children: [
-                // 🔹 작품 설명 맨 위에 추가
-                Card(
-                  color: Colors.grey[100],
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      artwork.description,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-
-                // 🔹 이어서 옵션 카드들
-                ...selectedOptions.map((option) {
-                  final content = artwork.details[option] ?? '정보 없음';
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(option, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text(content),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ],
-            ),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: Text(
+          artwork.title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
           ),
-
-            const SizedBox(height: 20),
-            Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    if (tourState.currentArtworkIndex < tourState.artworks.length - 1) {
-                      tourState.goToNextArtwork();
-                      tourState.entryPoint = 1;
-                      Navigator.pushNamed(context, '/navigate');
-                    } else {
-                      Navigator.pushNamed(context, '/end');
-                    }
+        ),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Future.delayed(const Duration(milliseconds: 250), () {
+            if (!_doubleTapDetected) _togglePlayPause();
+          });
+        },
+        onDoubleTap: () {
+          _doubleTapDetected = true;
+          _changeSpeed();
+          Future.delayed(const Duration(milliseconds: 300), () {
+            _doubleTapDetected = false;
+          });
+        },
+        onLongPress: () => _nextBlock(blocks),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '작품 해설',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '화면을 한 번 탭하면 재생/일시정지, 두 번 탭하면 재생 속도 변경, 길게 누르면 다음 섹션으로 이동합니다.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: selectedOptions.length,
+                  itemBuilder: (context, index) {
+                    final option = selectedOptions[index];
+                    final content = artwork.details[option] ?? '정보 없음';
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.grey[900],
+                        border: Border.all(
+                          color: Colors.grey[800]!,
+                          width: 1,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFD600),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '${index + 1}',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    option,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              content,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
-                  child: const Text('다음 작품 보러가기'),
                 ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    tourState.entryPoint = 2;
-                    Navigator.pushNamed(context, '/artworks');
-                  },
-                  child: const Text('작품 리스트로 돌아가기'),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () => _startAudio(audioPath),
-                  child: Text(
-                    isPlaying ? '해설 재생 중... (x$currentSpeed)' : '해설 듣기 (x$currentSpeed)',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/end');
-                  },
-                  child: const Text('관람 종료하기'),
-                ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 20),
+              _buildButton(
+                context, 
+                isPlaying ? '일시 정지' : '해설 듣기 (x$currentSpeed)',
+                isPlaying ? _togglePlayPause : () => _startAudio(audioPath),
+                false,
+                isPlaying ? Icons.pause : Icons.play_arrow
+              ),
+              _buildButton(
+                context,
+                '다음 작품 보러가기',
+                () {
+                  tourState.goToNextArtwork();
+                  Navigator.pushNamed(context, '/navigate');
+                },
+                false,
+                Icons.arrow_forward
+              ),
+              _buildButton(
+                context,
+                '작품 리스트로 돌아가기',
+                () {
+                  Navigator.pushNamed(context, '/artworks');
+                },
+                false,
+                Icons.list
+              ),
+              _buildButton(
+                context,
+                '관람 종료하기',
+                () {
+                  Navigator.pushNamed(context, '/end');
+                },
+                false,
+                Icons.exit_to_app
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 }
