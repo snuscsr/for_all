@@ -121,7 +121,7 @@ class OptionScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushNamed(context, '/artworks');
                 },
-                child: const Text('관람할 작품 선택하기'),
+                child: const Text('다음'),
               ),
             ),
           ],
