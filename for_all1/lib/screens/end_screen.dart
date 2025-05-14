@@ -15,25 +15,35 @@ class EndScreen extends StatelessWidget {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: _buildButton(
-            context,
-            '초기화면으로 돌아가기',
-            () {
-              tourState.resetTour(); // 상태 초기화
-              Navigator.pushNamedAndRemoveUntil(context, '/start', (_) => false);
-            },
-            false,
-            Icons.home,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 200),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 200),
+                
+                const SizedBox(height: 40),
+                _buildButton(
+                  context,
+                  '초기화면으로 돌아가기',
+                  () {
+                    tourState.resetTour();
+                    Navigator.pushNamedAndRemoveUntil(context, '/start', (_) => false);
+                  },
+                  false,
+                  Icons.home,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // 버튼 공통 위젯
   Widget _buildButton(BuildContext context, String text, VoidCallback onPressed,
       [bool isDisabled = false, IconData? icon]) {
     return Container(
@@ -58,12 +68,18 @@ class EndScreen extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
               Icon(icon, size: 24),
               const SizedBox(width: 12),
             ],
-            Text(isDisabled ? '처리 중... ($text)' : text),
+            Flexible(
+              child: Text(
+                isDisabled ? '처리 중... ($text)' : text,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),

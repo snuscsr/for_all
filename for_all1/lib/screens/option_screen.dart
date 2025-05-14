@@ -4,20 +4,23 @@ import '../providers/tour_state.dart';
 
 class OptionScreen extends StatelessWidget {
   const OptionScreen({super.key});
-  
+
   final List<String> options = const [
     '작품 크기',
     '작가 소개',
     '작품 배경'
   ];
-  
+
   @override
   Widget build(BuildContext context) {
     final tourState = Provider.of<TourState>(context);
+    final artwork = tourState.artworks[tourState.currentArtworkIndex];
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('관람 옵션 선택',
+        title: const Text(
+          '관람 옵션 선택',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
@@ -32,7 +35,15 @@ class OptionScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-                          const Text(
+            Text(
+              '작가: ${artwork.artist}',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
               '관심있는 설명 항목을 선택하세요',
               style: TextStyle(
                 color: Colors.white,

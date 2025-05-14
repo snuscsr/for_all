@@ -12,38 +12,97 @@ class ExplanationScreen extends StatefulWidget {
 
 class _ExplanationScreenState extends State<ExplanationScreen> {
   final FlutterTts tts = FlutterTts();
-  double currentSpeed = 1.0;
-  int? currentlySpeakingIndex;
+  final ScrollController _scrollController = ScrollController();
+  List<GlobalKey> _sectionKeys = [];
 
+  double currentSpeed = 0.6;
+  int? currentlySpeakingIndex;
+  bool isAutoPlaying = false;
 
   @override
   void initState() {
     super.initState();
+    tts.setLanguage("ko-KR");
     tts.setSpeechRate(currentSpeed);
-    tts.setLanguage("ko-KR"); // Korean TTS
-    tts.setCompletionHandler(() {
-    setState(() => currentlySpeakingIndex = null);
-});
+    tts.awaitSpeakCompletion(true);
 
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        playAllSectionsSequentially();
+      }
+    });
   }
 
   void _changeSpeed() {
     setState(() {
-      if (currentSpeed == 1.0) {
-        currentSpeed = 1.5;
-      } else if (currentSpeed == 1.5) {
-        currentSpeed = 2.0;
-      } else {
+      if (currentSpeed == 0.6) {
         currentSpeed = 1.0;
+      } else if (currentSpeed == 1.0) {
+        currentSpeed = 1.2;
+      } else {
+        currentSpeed = 0.6;
       }
     });
     tts.setSpeechRate(currentSpeed);
   }
 
-  Future<void> _speak(String text) async {
-    await tts.stop(); // Stop any ongoing speech
+  Future<void> _scrollToIndex(int index) async {
+    final keyContext = _sectionKeys[index].currentContext;
+    if (keyContext != null) {
+      await Scrollable.ensureVisible(
+        keyContext,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  Future<void> _speak(String text, int index) async {
+    await _scrollToIndex(index);
+    await tts.stop();
+    setState(() => currentlySpeakingIndex = index);
     await tts.setSpeechRate(currentSpeed);
     await tts.speak(text);
+  }
+
+  Future<void> playAllSectionsSequentially() async {
+    final tourState = Provider.of<TourState>(context, listen: false);
+    final artwork = tourState.artworks[tourState.currentArtworkIndex];
+    final selectedOptions = tourState.selectedOptions;
+
+    final allSections = [
+      {'label': '기본 정보', 'text': artwork.description},
+      ...selectedOptions.map((option) => {
+            'label': option,
+            'text': artwork.details[option] ?? '정보 없음',
+          }),
+    ];
+
+    _sectionKeys = List.generate(allSections.length, (_) => GlobalKey());
+
+    setState(() {
+      isAutoPlaying = true;
+    });
+
+    await tts.speak(
+      "각 항목을 누르면 음성으로 설명이 재생됩니다. 음성 속도는 버튼을 눌러 변경할 수 있습니다.",
+    );
+    await Future.delayed(const Duration(seconds: 2));
+
+    for (int i = 0; i < allSections.length; i++) {
+      final section = allSections[i];
+      final label = section['label']!;
+      final text = section['text']!;
+      setState(() => currentlySpeakingIndex = i);
+      await _scrollToIndex(i);
+      await tts.speak('$label. $text');
+      await Future.delayed(const Duration(seconds: 2));
+    }
+
+    setState(() {
+      currentlySpeakingIndex = null;
+      isAutoPlaying = false;
+    });
   }
 
   Widget _navButton(BuildContext context, String text, VoidCallback onPressed, IconData icon) {
@@ -56,21 +115,17 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFFD600),
           foregroundColor: Colors.black,
-          textStyle: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          textStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 24),
             const SizedBox(width: 12),
-            Text(text),
+            Flexible(child: Text(text, overflow: TextOverflow.ellipsis)),
           ],
         ),
       ),
@@ -83,24 +138,33 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
     final artwork = tourState.artworks[tourState.currentArtworkIndex];
     final selectedOptions = tourState.selectedOptions;
 
+    final allSections = [
+      {'label': '기본 정보', 'text': artwork.description},
+      ...selectedOptions.map((option) => {
+            'label': option,
+            'text': artwork.details[option] ?? '정보 없음',
+          }),
+    ];
+
+    if (_sectionKeys.length != allSections.length) {
+      _sectionKeys = List.generate(allSections.length, (_) => GlobalKey());
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
           artwork.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
         ),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: ListView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(24),
           children: [
             const Text(
               '작품 해설',
@@ -112,15 +176,13 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '각 항목을 누르면 음성으로 설명이 재생됩니다. 속도 조절 버튼을 통해 음성 속도를 변경할 수 있습니다.',
+              '각 항목을 누르면 음성으로 설명이 재생됩니다.\n음성 속도는 버튼을 눌러 변경할 수 있습니다.',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 16,
               ),
             ),
             const SizedBox(height: 20),
-
-            // Speed control button
             Container(
               margin: const EdgeInsets.only(bottom: 20),
               width: double.infinity,
@@ -137,72 +199,67 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
                 child: Text('음성 속도: x$currentSpeed'),
               ),
             ),
-
-            // Explanation blocks
-            ...selectedOptions.asMap().entries.map((entry) {
+            ...allSections.asMap().entries.map((entry) {
               final index = entry.key;
-              final option = entry.value;
-              final content = artwork.details[option] ?? '정보 없음';
+              final label = entry.value['label']!;
+              final text = entry.value['text']!;
               final isSpeaking = index == currentlySpeakingIndex;
 
-              return ExcludeSemantics(
-                child: GestureDetector(
-                  onTap: () async {
-                    setState(() => currentlySpeakingIndex = index);
-                    await _speak('$option. $content');
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
+              return Container(
+                key: _sectionKeys[index],
+                margin: const EdgeInsets.only(bottom: 16),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _speak('$label. $text', index),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isSpeaking ? const Color(0xFFFFF59D) : Colors.grey[900],
+                    foregroundColor: isSpeaking ? Colors.black : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      color: isSpeaking ? const Color(0xFFFFF59D) : Colors.grey[900],
-                      border: Border.all(
-                        color: isSpeaking ? const Color(0xFFFFD600) : Colors.grey[800]!,
-                        width: 2,
-                      ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: isSpeaking ? Colors.black : const Color(0xFFFFD600),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: isSpeaking ? Colors.yellow : Colors.black,
-                                ),
-                              ),
+                    side: BorderSide(
+                      color: isSpeaking ? const Color(0xFFFFD600) : Colors.grey[800]!,
+                      width: 2,
+                    ),
+                    elevation: isSpeaking ? 4 : 0,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isSpeaking ? Colors.black : const Color(0xFFFFD600),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$index',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: isSpeaking ? Colors.yellow : Colors.black,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              option,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: isSpeaking ? Colors.black : Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
             }),
-
-
             const SizedBox(height: 20),
             _navButton(
               context,
@@ -216,17 +273,13 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
             _navButton(
               context,
               '작품 리스트로 돌아가기',
-              () {
-                Navigator.pushNamed(context, '/artworks');
-              },
+              () => Navigator.pushNamed(context, '/artworks'),
               Icons.list,
             ),
             _navButton(
               context,
               '관람 종료하기',
-              () {
-                Navigator.pushNamed(context, '/end');
-              },
+              () => Navigator.pushNamed(context, '/end'),
               Icons.exit_to_app,
             ),
           ],
@@ -238,6 +291,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
   @override
   void dispose() {
     tts.stop();
+    _scrollController.dispose();
     super.dispose();
   }
 }
