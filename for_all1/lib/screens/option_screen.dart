@@ -35,13 +35,7 @@ class OptionScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '작가: ${artwork.artist}',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 18,
-              ),
-            ),
+            
             const SizedBox(height: 16),
             const Text(
               '관심있는 설명 항목을 선택하세요',
