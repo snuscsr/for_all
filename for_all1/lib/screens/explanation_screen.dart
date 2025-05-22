@@ -10,37 +10,53 @@ class ExplanationScreen extends StatefulWidget {
   State<ExplanationScreen> createState() => _ExplanationScreenState();
 }
 
-class _ExplanationScreenState extends State<ExplanationScreen> {
+class _ExplanationScreenState extends State<ExplanationScreen> with WidgetsBindingObserver {
   final FlutterTts tts = FlutterTts();
   final ScrollController _scrollController = ScrollController();
   List<GlobalKey> _sectionKeys = [];
 
-  double currentSpeed = 0.6;
+  double currentSpeed = 0.5;
   int? currentlySpeakingIndex;
   bool isAutoPlaying = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     tts.setLanguage("ko-KR");
     tts.setSpeechRate(currentSpeed);
     tts.awaitSpeakCompletion(true);
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
         playAllSectionsSequentially();
       }
     });
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    tts.stop();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      tts.stop();
+    }
+  }
+
   void _changeSpeed() {
     setState(() {
-      if (currentSpeed == 0.6) {
+      if (currentSpeed == 0.5) {
+        currentSpeed = 0.7;
+      } else if (currentSpeed == 0.7) {
         currentSpeed = 1.0;
-      } else if (currentSpeed == 1.0) {
-        currentSpeed = 1.2;
       } else {
-        currentSpeed = 0.6;
+        currentSpeed = 0.5;
       }
     });
     tts.setSpeechRate(currentSpeed);
@@ -286,12 +302,5 @@ class _ExplanationScreenState extends State<ExplanationScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    tts.stop();
-    _scrollController.dispose();
-    super.dispose();
   }
 }
