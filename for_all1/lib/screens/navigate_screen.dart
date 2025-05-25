@@ -59,7 +59,13 @@ class _NavigateScreenState extends State<NavigateScreen> {
     targetX = artwork.x;
     targetY = artwork.y;
 
+
     _initTts();
+
+    if (connection != null) {
+      connection!.dispose();
+      connection = null;
+    }
     connectToHC06();
   }
 

@@ -62,6 +62,26 @@ class _ExplanationScreenState extends State<ExplanationScreen> with WidgetsBindi
     tts.setSpeechRate(currentSpeed);
   }
 
+  String _getDisplaySpeed() {
+    switch (currentSpeed) {
+      case 0.5:
+        return '1.0';
+      case 0.7:
+        return '1.5';
+      case 1.0:
+        return '2.0';
+      default:
+        return '1.0';
+    }
+  }
+
+  Future<void> _stopTtsAndNavigate(BuildContext context, String route) async {
+      await tts.stop();
+      if (!mounted) return;
+      Navigator.pushNamed(context, route);
+    }
+
+
   Future<void> _scrollToIndex(int index) async {
     final keyContext = _sectionKeys[index].currentContext;
     if (keyContext != null) {
@@ -94,6 +114,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> with WidgetsBindi
           }),
     ];
 
+
     _sectionKeys = List.generate(allSections.length, (_) => GlobalKey());
 
     setState(() {
@@ -101,7 +122,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> with WidgetsBindi
     });
 
     await tts.speak(
-      "각 항목을 누르면 음성으로 설명이 재생됩니다. 음성 속도는 버튼을 눌러 변경할 수 있습니다.",
+      "각 항목을 누르면 음성으로 설명이 재생됩니다. 음성 속도는 버튼을 눌러 변경할 수 있습니다. ",
     );
     await Future.delayed(const Duration(seconds: 2));
 
@@ -212,7 +233,7 @@ class _ExplanationScreenState extends State<ExplanationScreen> with WidgetsBindi
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text('음성 속도: x$currentSpeed'),
+                child: Text('음성 속도: x${_getDisplaySpeed()}'),
               ),
             ),
             ...allSections.asMap().entries.map((entry) {
@@ -280,25 +301,29 @@ class _ExplanationScreenState extends State<ExplanationScreen> with WidgetsBindi
             _navButton(
               context,
               '다음 작품 보러가기',
-              () {
+              () async {
+                final tourState = Provider.of<TourState>(context, listen: false);
                 tourState.goToNextArtwork();
-                Navigator.pushNamed(context, '/navigate');
+                await _stopTtsAndNavigate(context, '/navigate');
               },
               Icons.arrow_forward,
             ),
+
             _navButton(
               context,
               '작품 리스트로 돌아가기',
-              () => Navigator.pushNamed(context, '/artworks'),
+              () => _stopTtsAndNavigate(context, '/artworks'),
               Icons.list,
             ),
+
             _navButton(
               context,
               '관람 종료하기',
-              () => Navigator.pushNamed(context, '/end'),
+              () => _stopTtsAndNavigate(context, '/end'),
               Icons.exit_to_app,
             ),
-          ],
+
+                      ],
         ),
       ),
     );
