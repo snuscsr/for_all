@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -16,6 +17,7 @@ class NavigateScreen extends StatefulWidget {
 
 class _NavigateScreenState extends State<NavigateScreen> {
   BluetoothConnection? connection;
+  StreamSubscription<String>? _subscription;
   bool isConnected = false;
 
   // 목표·허용 오차
@@ -54,24 +56,36 @@ class _NavigateScreenState extends State<NavigateScreen> {
   void initState() {
     super.initState();
 
-    final tourState = Provider.of<TourState>(context, listen: false);
-    final artwork = tourState.artworks[tourState.currentArtworkIndex];
-    targetX = artwork.x;
-    targetY = artwork.y;
+    // 플래그 초기화
+    instructionGiven = false;
+    arrivedNotified = false;
+    obstacleNotified = false;
+    cornerNotified = false;
+    needsOriginReset = false;
+    hasValidPosition = false;
+    currentX = null;
+    currentY = null;
+    currentZ = null;
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tourState = Provider.of<TourState>(context, listen: false);
+      final artwork = tourState.artworks[tourState.currentArtworkIndex];
+      targetX = artwork.x;
+      targetY = artwork.y;
 
-    _initTts();
-
-    if (connection != null) {
-      connection!.dispose();
-      connection = null;
-    }
-    connectToHC06();
+      _initTts();
+      if (connection != null) {
+        connection!.dispose();
+        connection = null;
+      }
+      connectToHC06();
+    });
   }
 
   Future<void> _initTts() async {
     await tts.setLanguage('ko-KR');
     await tts.setSpeechRate(0.4);
+    await tts.awaitSpeakCompletion(true);
   }
 
   Future<void> connectToHC06() async {
@@ -91,7 +105,7 @@ class _NavigateScreenState extends State<NavigateScreen> {
   }
 
   void _startListen() {
-    connection!.input!
+    _subscription = connection!.input!
         .cast<List<int>>()
         .transform(utf8.decoder)
         .listen((chunk) {
@@ -118,6 +132,8 @@ class _NavigateScreenState extends State<NavigateScreen> {
       }
     }, onDone: () {
       setState(() => isConnected = false);
+    }, onError: (e) {
+      debugPrint('스트림 에러: $e');
     });
   }
 
@@ -133,39 +149,53 @@ class _NavigateScreenState extends State<NavigateScreen> {
   }
 
   void _updatePosition(Map<String, double> pos) {
+    final x = pos['x']!;
+    final y = pos['y']!;
+    final z = pos['z']!;
+
+    bool newlyArrived = !arrivedNotified &&
+        (x - targetX).abs() < tolerance &&
+        (y - targetY).abs() < tolerance;
+
+    bool newlyObstacle = !obstacleNotified &&
+        (x - obstacleX).abs() < obstacleRange &&
+        (y - obstacleY).abs() < obstacleRange;
+
+    bool newlyCorner = false;
+    for (final c in cornerPositions) {
+      if ((x - c['x']!).abs() < cornerRange &&
+          (y - c['y']!).abs() < cornerRange) {
+        newlyCorner = true;
+        break;
+      }
+    }
+
     setState(() {
-      currentX = pos['x'];
-      currentY = pos['y'];
-      currentZ = pos['z'];
+      currentX = x;
+      currentY = y;
+      currentZ = z;
+      hasValidPosition = true;
+      needsOriginReset = false;
+
+      if (newlyArrived) arrivedNotified = true;
+      if (newlyObstacle) obstacleNotified = true;
+      if (newlyCorner) cornerNotified = true;
     });
 
-    debugPrint('📍 현재 위치: x=${pos['x']}, y=${pos['y']}');
+    debugPrint('📍 현재 위치: x=$x, y=$y');
     debugPrint('🎯 목표 위치: x=$targetX, y=$targetY');
 
-    if (!arrivedNotified &&
-        (pos['x']! - targetX).abs() < tolerance &&
-        (pos['y']! - targetY).abs() < tolerance) {
+    if (newlyArrived) {
       _vibrate();
-      arrivedNotified = true;
       tts.speak('도착했습니다. 작품 해설 듣기 버튼을 눌러주세요.');
     }
 
-    if (!obstacleNotified &&
-        (pos['x']! - obstacleX).abs() < obstacleRange &&
-        (pos['y']! - obstacleY).abs() < obstacleRange) {
-      obstacleNotified = true;
+    if (newlyObstacle) {
       tts.speak('장애물 근처입니다. 주의하세요.');
     }
 
-    if (!cornerNotified) {
-      for (final c in cornerPositions) {
-        if ((pos['x']! - c['x']!).abs() < cornerRange &&
-            (pos['y']! - c['y']!).abs() < cornerRange) {
-          cornerNotified = true;
-          tts.speak('코너에 접근했습니다. 주의해서 이동하세요.');
-          break;
-        }
-      }
+    if (newlyCorner) {
+      tts.speak('코너에 접근했습니다. 주의해서 이동하세요.');
     }
   }
 
@@ -194,11 +224,19 @@ class _NavigateScreenState extends State<NavigateScreen> {
   }
 
   @override
+
   void dispose() {
-    tts.stop();
+    debugPrint('[dispose] 스트림 중단 및 리소스 해제');
+    _subscription?.cancel();
+    _subscription = null;
+
     connection?.dispose();
+    connection = null;
+
+    tts.stop();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -223,8 +261,8 @@ class _NavigateScreenState extends State<NavigateScreen> {
                   Text(
                     currentX != null
                         ? '현재 좌표  x:${currentX!.toStringAsFixed(2)}  '
-                          'y:${currentY!.toStringAsFixed(2)}  '
-                          'z:${currentZ!.toStringAsFixed(2)}'
+                            'y:${currentY!.toStringAsFixed(2)}  '
+                            'z:${currentZ!.toStringAsFixed(2)}'
                         : isConnected
                             ? '좌표 수신 대기 중...'
                             : '블루투스 연결 중...',
@@ -247,7 +285,15 @@ class _NavigateScreenState extends State<NavigateScreen> {
                 width: double.infinity,
                 height: 65,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/explanation'),
+                  onPressed: () {
+                    _subscription?.cancel();
+                    _subscription = null;
+                    connection?.dispose();
+                    connection = null;
+
+                    Navigator.pushNamed(context, '/explanation');
+                  },
+
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFD600),
                     foregroundColor: Colors.black,
